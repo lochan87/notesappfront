@@ -269,7 +269,7 @@ const NoteView: React.FC = () => {
   const folderData = typeof note.folderId === 'object' ? note.folderId : null;
 
   return (
-    <div className="container-fluid py-4">
+    <div className="container-fluid py-4 note-view">
       {/* Header */}
       <div className="row mb-4">
         <div className="col">
@@ -297,8 +297,8 @@ const NoteView: React.FC = () => {
             </ol>
           </nav>
 
-          <div className="d-flex justify-content-between align-items-center">
-            <div className="d-flex align-items-center">
+          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
+            <div className="d-flex align-items-center mb-3 mb-lg-0">
               {note.isPinned && (
                 <i className="bi bi-pin-fill text-warning me-3" style={{ fontSize: '1.5rem' }}></i>
               )}
@@ -311,7 +311,7 @@ const NoteView: React.FC = () => {
               </div>
             </div>
             
-            <div className="btn-group">
+            <div className="btn-group btn-group-sm d-flex justify-content-start gap-2">
               {!isEditing ? (
                 <>
                   <button
@@ -319,7 +319,8 @@ const NoteView: React.FC = () => {
                     onClick={handleTogglePin}
                     title={note.isPinned ? 'Unpin note' : 'Pin note'}
                   >
-                    <i className={`bi ${note.isPinned ? 'bi-pin' : 'bi-pin-fill'}`}></i>
+                    <i className={`bi ${note.isPinned ? 'bi-pin' : 'bi-pin-fill'} me-2`}></i>
+                    Pin
                   </button>
                   <button
                     className="btn btn-primary"
@@ -336,7 +337,10 @@ const NoteView: React.FC = () => {
                     {isDeleting ? (
                       <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     ) : (
-                      <i className="bi bi-trash"></i>
+                      <>
+                        <i className="bi bi-trash me-2"></i>
+                        Delete
+                      </>
                     )}
                   </button>
                 </>

@@ -187,6 +187,82 @@
     font-size: 1.25rem;
   }
   
+  /* Navbar mobile improvements */
+  .navbar-toggler {
+    border: none;
+    padding: 0.25rem 0.5rem;
+    font-size: 1.1rem;
+  }
+  
+  .navbar-toggler:focus {
+    box-shadow: none;
+  }
+  
+  .navbar-collapse {
+    margin-top: 0.5rem;
+  }
+  
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin: 0.125rem 0;
+  }
+  
+  .navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Fix theme toggle alignment - keep it inline with other nav items */
+  .theme-toggle {
+    justify-content: flex-start !important;
+    margin: 0.125rem 0 !important;
+    width: auto !important;
+    border-radius: 0.375rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+  
+  /* Mobile navbar layout improvements */
+  .navbar-collapse .navbar-nav {
+    align-items: stretch !important;
+  }
+  
+  .navbar-collapse .navbar-nav .nav-item {
+    width: 100%;
+  }
+  
+  .dropdown-menu {
+    position: static !important;
+    width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    margin-top: 0.5rem !important;
+  }
+  
+  /* Mobile header button improvements */
+  .flex-fill {
+    flex: 1 1 0% !important;
+  }
+  
+  /* Ensure buttons take equal width on mobile */
+  .btn-group.flex-fill {
+    width: 100%;
+  }
+  
+  .btn-group.flex-fill .btn {
+    flex: 1;
+  }
+  
+  /* Keep view toggle buttons compact */
+  .btn-group:not(.flex-fill) {
+    flex: 0 0 auto;
+  }
+  
+  .btn-group .btn-sm {
+    padding: 0.375rem 0.5rem;
+    min-width: 2.5rem;
+  }
+  
   .card-body {
     padding: 1rem;
   }
@@ -201,6 +277,17 @@
   }
 }
 
+/* Responsive flex utilities */
+@media (min-width: 768px) {
+  .flex-md-fill-0 {
+    flex: 0 0 auto !important;
+  }
+  
+  .w-md-auto {
+    width: auto !important;
+  }
+}
+
 @media (max-width: 576px) {
   .modal-dialog {
     margin: 1rem;
@@ -209,6 +296,63 @@
   .container-fluid {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+  
+  /* Mobile touch improvements */
+  .navbar-nav .nav-link,
+  .dropdown-item,
+  .btn {
+    min-height: 44px; /* Apple's recommended touch target size */
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Remove duplicate theme-toggle styling to avoid conflicts */
+  
+  .navbar-toggler {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve card touch targets */
+  .card {
+    margin-bottom: 1.5rem;
+  }
+  
+  .card-title a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Mobile modal footer improvements */
+    /* Improve Delete button styling on mobile */
+  .modal-footer .btn-danger {
+    font-weight: 600;
+  }
+  
+  /* Note view mobile button improvements */
+  .note-view .btn-group {
+    flex-wrap: nowrap;
+  }
+  
+  .note-view .btn-group .btn {
+    min-height: 44px;
+    flex: 0 1 auto;
+    white-space: nowrap;
+    font-size: 0.875rem;
+  }
+  
+  .note-view .btn-group .btn i {
+    font-size: 1rem;
+  }
+  
+  .modal-footer .d-flex.flex-column .btn {
+    margin-bottom: 0.5rem;
+  }
+  
+  .modal-footer .d-flex.flex-column .btn:last-child {
+    margin-bottom: 0;
   }
 }
 
@@ -283,6 +427,22 @@
 
 .dark-theme .navbar-nav .nav-link:hover {
   color: #007bff !important;
+}
+
+/* Dark mode mobile navbar improvements */
+.dark-theme .navbar-collapse {
+  background-color: var(--bg-secondary) !important;
+  border-radius: 0.375rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+}
+
+.dark-theme .navbar-nav .nav-link:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark-theme .dropdown-menu {
+  background-color: var(--bg-tertiary) !important;
 }
 
 .dark-theme .card {

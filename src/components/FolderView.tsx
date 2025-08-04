@@ -172,7 +172,7 @@ const FolderView: React.FC = () => {
             </ol>
           </nav>
 
-          <div className="d-flex justify-content-between align-items-center">
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <div className="d-flex align-items-center">
               <div
                 className="rounded me-3"
@@ -190,16 +190,16 @@ const FolderView: React.FC = () => {
               </div>
             </div>
             
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 w-100 w-md-auto">
               <button
-                className="btn btn-outline-secondary"
+                className="btn btn-outline-secondary flex-fill flex-md-fill-0"
                 onClick={() => setShowEditModal(true)}
               >
                 <i className="bi bi-pencil me-2"></i>
                 Edit Folder
               </button>
               <button
-                className="btn btn-primary"
+                className="btn btn-primary flex-fill flex-md-fill-0"
                 onClick={() => setShowCreateModal(true)}
               >
                 <i className="bi bi-plus-lg me-2"></i>

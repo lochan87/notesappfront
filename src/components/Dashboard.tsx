@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <div className="row mb-4">
         <div className="col">
-          <div className="d-flex justify-content-between align-items-center">
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
             <div>
               <h1 className="h3 mb-1">
                 <i className="bi bi-folder2-open me-2 text-primary"></i>
@@ -65,19 +65,19 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
             
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 w-100 w-md-auto">
               {/* View Toggle */}
               <div className="btn-group" role="group" aria-label="View mode">
                 <button
                   type="button"
-                  className={`btn btn-outline-secondary ${viewMode === 'grid' ? 'active' : ''}`}
+                  className={`btn btn-sm btn-outline-secondary ${viewMode === 'grid' ? 'active' : ''}`}
                   onClick={() => setViewMode('grid')}
                 >
                   <i className="bi bi-grid"></i>
                 </button>
                 <button
                   type="button"
-                  className={`btn btn-outline-secondary ${viewMode === 'list' ? 'active' : ''}`}
+                  className={`btn btn-sm btn-outline-secondary ${viewMode === 'list' ? 'active' : ''}`}
                   onClick={() => setViewMode('list')}
                 >
                   <i className="bi bi-list"></i>

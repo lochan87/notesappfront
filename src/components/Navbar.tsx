@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -7,7 +7,6 @@ const Navbar: React.FC = () => {
   const { logout, user } = useAuth();
   const { toggleTheme, isDark } = useTheme();
   const location = useLocation();
-  const [showDropdown, setShowDropdown] = useState(false);
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
@@ -18,6 +17,17 @@ const Navbar: React.FC = () => {
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    const navbarCollapse = document.getElementById('navbarNav');
+    if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+      const bsCollapse = new (window as any).bootstrap.Collapse(navbarCollapse, {
+        toggle: false
+      });
+      bsCollapse.hide();
+    }
+  }, [location]);
 
   return (
     <nav className={`navbar navbar-expand-lg ${isDark ? 'navbar-dark bg-dark' : 'navbar-dark bg-primary'} shadow-sm`}>
@@ -71,7 +81,7 @@ const Navbar: React.FC = () => {
                 }}
               >
                 <i className={`bi bi-${isDark ? 'sun' : 'moon'}-fill`}></i>
-                <span className="d-none d-sm-inline">
+                <span>
                   {isDark ? 'Light' : 'Dark'}
                 </span>
               </button>
@@ -83,16 +93,13 @@ const Navbar: React.FC = () => {
                 href="#"
                 role="button"
                 data-bs-toggle="dropdown"
-                aria-expanded={showDropdown}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowDropdown(!showDropdown);
-                }}
+                aria-expanded="false"
+                id="navbarDropdown"
               >
                 <i className="bi bi-person-circle me-2"></i>
-                <span className="d-none d-md-inline">Lochan</span>
+                <span>Lochan</span>
               </a>
-              <ul className={`dropdown-menu dropdown-menu-end ${showDropdown ? 'show' : ''}`}>
+              <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                 <li>
                   <div className="dropdown-item-text">
                     <small className="text-muted">
@@ -115,9 +122,6 @@ const Navbar: React.FC = () => {
           </ul>
         </div>
       </div>
-
-      {/* Add Bootstrap JS for dropdown functionality */}
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </nav>
   );
 };

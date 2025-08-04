@@ -314,10 +314,10 @@ const EditFolderModal: React.FC<EditFolderModalProps> = ({ show, onHide, onFolde
               </div>
 
               <div className="modal-footer">
-                <div className="d-flex justify-content-between w-100">
+                <div className="d-flex flex-column flex-sm-row justify-content-between w-100 gap-2">
                   <button
                     type="button"
-                    className="btn btn-danger"
+                    className="btn btn-danger order-3 order-sm-1"
                     onClick={handleDelete}
                     disabled={loading || deleting}
                   >
@@ -334,10 +334,10 @@ const EditFolderModal: React.FC<EditFolderModalProps> = ({ show, onHide, onFolde
                     )}
                   </button>
                   
-                  <div className="d-flex gap-2">
+                  <div className="d-flex gap-2 order-1 order-sm-2">
                     <button
                       type="button"
-                      className="btn btn-secondary"
+                      className="btn btn-secondary flex-fill flex-sm-none"
                       onClick={handleHide}
                       disabled={loading || deleting}
                     >
@@ -345,7 +345,7 @@ const EditFolderModal: React.FC<EditFolderModalProps> = ({ show, onHide, onFolde
                     </button>
                     <button
                       type="submit"
-                      className="btn btn-primary"
+                      className="btn btn-primary flex-fill flex-sm-none"
                       disabled={loading || deleting || !formData.name.trim()}
                     >
                       {loading ? (
