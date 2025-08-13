@@ -160,7 +160,14 @@ const NoteView: React.FC = () => {
     setIsEditing(true);
     // Automatically set the current date and time for lastModified field using local time
     const now = new Date();
-    const currentDateTime = formatDateForInput(now.toISOString());
+    // Create local datetime string in the correct format
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const currentDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    
     setEditData(prev => ({ 
       ...prev, 
       lastModified: currentDateTime 
@@ -169,6 +176,7 @@ const NoteView: React.FC = () => {
       ...prev, 
       lastModified: true 
     }));
+    console.log('Setting edit time to:', currentDateTime, 'for current time:', now.toLocaleString());
   };
 
   const handleEditCancel = () => {
