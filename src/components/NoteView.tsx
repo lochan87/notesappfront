@@ -22,6 +22,10 @@ const NoteView: React.FC = () => {
   });
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
+  const [datesModified, setDatesModified] = useState({
+    createdAt: false,
+    lastModified: false
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -38,6 +42,10 @@ const NoteView: React.FC = () => {
         isPinned: data.isPinned,
         createdAt: formatDateForInput(data.mainCreatedAt || data.createdAt),
         lastModified: formatDateForInput(data.mainLastModified || data.lastModified)
+      });
+      setDatesModified({
+        createdAt: false,
+        lastModified: false
       });
       setError('');
     } catch (err) {
@@ -81,19 +89,32 @@ const NoteView: React.FC = () => {
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
 
-      const updatedNote = await noteApi.update(note._id, {
+      const updateData: any = {
         title: editData.title.trim(),
         content: editData.content.trim(),
         tags,
         isPinned: editData.isPinned,
         images: selectedImages,
-        removeImages: imagesToRemove,
-        customCreatedAt: editData.createdAt,
-        customLastModified: editData.lastModified
-      });
+        removeImages: imagesToRemove
+      };
+
+      // Only send custom dates if they were actually modified by the user
+      if (datesModified.createdAt) {
+        updateData.customCreatedAt = editData.createdAt;
+      }
+      
+      if (datesModified.lastModified) {
+        updateData.customLastModified = editData.lastModified;
+      }
+
+      const updatedNote = await noteApi.update(note._id, updateData);
 
       setNote(updatedNote);
       setIsEditing(false);
+      setDatesModified({
+        createdAt: false,
+        lastModified: false
+      });
       setSelectedImages([]);
       setImagesToRemove([]);
       if (fileInputRef.current) {
@@ -135,6 +156,21 @@ const NoteView: React.FC = () => {
     }
   };
 
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    // Automatically set the current date and time for lastModified field using local time
+    const now = new Date();
+    const currentDateTime = formatDateForInput(now.toISOString());
+    setEditData(prev => ({ 
+      ...prev, 
+      lastModified: currentDateTime 
+    }));
+    setDatesModified(prev => ({ 
+      ...prev, 
+      lastModified: true 
+    }));
+  };
+
   const handleEditCancel = () => {
     if (!note) return;
     
@@ -145,6 +181,10 @@ const NoteView: React.FC = () => {
       isPinned: note.isPinned,
       createdAt: formatDateForInput(note.mainCreatedAt || note.createdAt),
       lastModified: formatDateForInput(note.mainLastModified || note.lastModified)
+    });
+    setDatesModified({
+      createdAt: false,
+      lastModified: false
     });
     setSelectedImages([]);
     setImagesToRemove([]);
@@ -324,7 +364,7 @@ const NoteView: React.FC = () => {
                   </button>
                   <button
                     className="btn btn-primary"
-                    onClick={() => setIsEditing(true)}
+                    onClick={handleStartEdit}
                   >
                     <i className="bi bi-pencil me-2"></i>
                     Edit
@@ -456,7 +496,10 @@ const NoteView: React.FC = () => {
                         className="form-control"
                         id="editCreatedAt"
                         value={editData.createdAt}
-                        onChange={(e) => setEditData(prev => ({ ...prev, createdAt: e.target.value }))}
+                        onChange={(e) => {
+                          setEditData(prev => ({ ...prev, createdAt: e.target.value }));
+                          setDatesModified(prev => ({ ...prev, createdAt: true }));
+                        }}
                         disabled={isSaving}
                       />
                       <div className="form-text">When this note was originally created</div>
@@ -470,7 +513,10 @@ const NoteView: React.FC = () => {
                         className="form-control"
                         id="editLastModified"
                         value={editData.lastModified}
-                        onChange={(e) => setEditData(prev => ({ ...prev, lastModified: e.target.value }))}
+                        onChange={(e) => {
+                          setEditData(prev => ({ ...prev, lastModified: e.target.value }));
+                          setDatesModified(prev => ({ ...prev, lastModified: true }));
+                        }}
                         disabled={isSaving}
                       />
                       <div className="form-text">When this note was last updated</div>
