@@ -396,25 +396,22 @@ const FolderView: React.FC = () => {
           <p className="text-muted">Loading notes...</p>
         </div>
       ) : notes.length === 0 ? (
-        <div className="text-center py-5">
-          <div className="mb-4">
-            <i className="bi bi-file-text text-muted" style={{ fontSize: '4rem' }}></i>
+        <div className="empty-state">
+          <div className={`empty-state-icon ${searchQuery ? 'search' : 'notes'}`}>
+            <i className={`bi ${searchQuery ? 'bi-search' : 'bi-journal-plus'}`} />
           </div>
-          <h4 className="text-muted mb-3">
-            {searchQuery ? 'No notes found' : 'No notes yet'}
-          </h4>
-          <p className="text-muted mb-4">
-            {searchQuery 
+          <h4>{searchQuery ? 'No notes found' : 'No notes yet'}</h4>
+          <p>
+            {searchQuery
               ? `No notes match "${searchQuery}". Try a different search term.`
-              : 'Create your first note in this folder'
-            }
+              : 'Create your first note in this folder to get started.'}
           </p>
           {!searchQuery && (
             <button
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary btn-lg px-4"
               onClick={() => setShowCreateModal(true)}
             >
-              <i className="bi bi-plus-lg me-2"></i>
+              <i className="bi bi-plus-lg me-2" />
               Create Your First Note
             </button>
           )}

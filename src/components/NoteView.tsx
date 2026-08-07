@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { noteApi, Note } from '../services/api';
+import ConfirmModal from './ConfirmModal';
+import Toast, { useToast } from './Toast';
 
 const NoteView: React.FC = () => {
   const { noteId } = useParams<{ noteId: string }>();
@@ -29,6 +31,8 @@ const NoteView: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { toasts, addToast, dismissToast } = useToast();
 
   // ── Image zoom / pan state ───────────────────────────────────────────────
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -118,15 +122,13 @@ const NoteView: React.FC = () => {
 
       setNote(updatedNote);
       setIsEditing(false);
-      setDatesModified({
-        createdAt: false,
-        lastModified: false
-      });
+      setDatesModified({ createdAt: false, lastModified: false });
       setSelectedImages([]);
       setImagesToRemove([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
+
+      // Show brief success toast
+      addToast('Note saved successfully', 'success', 2500);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to save note. Please try again.');
     } finally {
@@ -136,18 +138,19 @@ const NoteView: React.FC = () => {
 
   const handleDelete = async () => {
     if (!note) return;
+    setShowDeleteConfirm(true);
+  };
 
-    if (!window.confirm(`Are you sure you want to delete "${note.title}"? This action cannot be undone.`)) {
-      return;
-    }
-
+  const confirmDelete = async () => {
+    if (!note) return;
     try {
       setIsDeleting(true);
       await noteApi.delete(note._id);
       navigate(`/folder/${(note.folderId as any)._id || note.folderId}`);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete note. Please try again.');
+      addToast(err.response?.data?.message || 'Failed to delete note', 'error');
       setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -431,6 +434,7 @@ const NoteView: React.FC = () => {
   const folderData = typeof note.folderId === 'object' ? note.folderId : null;
 
   return (
+    <>
     <div className="container-fluid py-4 note-view">
       {/* Header */}
       <div className="row mb-4">
@@ -582,10 +586,17 @@ const NoteView: React.FC = () => {
                       id="editContent"
                       rows={15}
                       value={editData.content}
-                      onChange={(e) => setEditData(prev => ({ ...prev, content: e.target.value }))}
+                      onChange={(e) => {
+                        setEditData(prev => ({ ...prev, content: e.target.value }));
+                        // Auto-grow: expand height to fit content (mobile-friendly)
+                        const el = e.target;
+                        el.style.height = 'auto';
+                        el.style.height = `${el.scrollHeight}px`;
+                      }}
                       maxLength={10000}
                       disabled={isSaving}
-                      placeholder="Write your note content here... URLs will automatically become clickable links."
+                      placeholder="Write your note content here… URLs will automatically become clickable links."
+                      style={{ minHeight: '280px', resize: 'vertical' }}
                     />
                     <div className="form-text">
                       {editData.content.length}/10,000 characters • URLs will be automatically converted to clickable links
@@ -1034,6 +1045,22 @@ const NoteView: React.FC = () => {
         </>
       )}
     </div>
+
+      {/* Delete confirm modal */}
+      <ConfirmModal
+        show={showDeleteConfirm}
+        title="Delete Note"
+        message={`Are you sure you want to delete "${note?.title}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        isLoading={isDeleting}
+      />
+
+      {/* Toast notifications */}
+      <Toast toasts={toasts} onDismiss={dismissToast} />
+    </>
   );
 };
 

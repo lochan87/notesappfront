@@ -1093,3 +1093,78 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 86, 179, 0.06) !important;
   border-radius: 16px !important;
 }
+
+/* ─── Toast notifications ─────────────────────────────────────────────────── */
+
+@keyframes toastSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* ─── Enhanced empty states ───────────────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+}
+
+.empty-state-icon.folders {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+}
+
+.empty-state-icon.notes {
+  background: rgba(102, 16, 242, 0.08);
+  color: #6610f2;
+}
+
+.empty-state-icon.search {
+  background: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+}
+
+.empty-state h4 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  max-width: 320px;
+  color: #6c757d;
+  font-size: 0.92rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Saved indicator pulse */
+.save-success-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #198754;
+  animation: saveSuccessFade 2.5s ease forwards;
+}
+
+@keyframes saveSuccessFade {
+  0%   { opacity: 0; transform: translateY(4px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+

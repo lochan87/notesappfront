@@ -120,19 +120,17 @@ const Dashboard: React.FC = () => {
       {folders.length === 0 ? (
         <div className="row">
           <div className="col">
-            <div className="text-center py-5">
-              <div className="mb-4">
-                <i className="bi bi-folder2 text-muted" style={{ fontSize: '4rem' }}></i>
+            <div className="empty-state">
+              <div className="empty-state-icon folders">
+                <i className="bi bi-folder-plus" />
               </div>
-              <h4 className="text-muted mb-3">No folders yet</h4>
-              <p className="text-muted mb-4">
-                Create your first folder to start organizing your notes
-              </p>
+              <h4>No folders yet</h4>
+              <p>Create your first folder to start organizing your notes. Keep everything tidy and easy to find.</p>
               <button
-                className="btn btn-primary btn-lg"
+                className="btn btn-primary btn-lg px-4"
                 onClick={() => setShowCreateModal(true)}
               >
-                <i className="bi bi-plus-lg me-2"></i>
+                <i className="bi bi-plus-lg me-2" />
                 Create Your First Folder
               </button>
             </div>

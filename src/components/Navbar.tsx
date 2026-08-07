@@ -1,18 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import ConfirmModal from './ConfirmModal';
 
 const Navbar: React.FC = () => {
   const { logout, user } = useAuth();
   const { toggleTheme, isDark } = useTheme();
   const location = useLocation();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      logout();
-    }
-  };
+  const handleLogout = () => setShowLogoutConfirm(true);
+  const confirmLogout = () => { setShowLogoutConfirm(false); logout(); };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -28,6 +27,7 @@ const Navbar: React.FC = () => {
   }, [location]);
 
   return (
+    <>
     <nav
       className={`navbar navbar-expand-lg ${isDark ? 'navbar-dark bg-dark' : 'navbar-dark bg-primary'} shadow-sm`}
       style={{ minHeight: '60px' }}
@@ -111,7 +111,9 @@ const Navbar: React.FC = () => {
                 <li>
                   <div className="dropdown-item-text">
                     <small className="text-muted">
-                      Last login: {user?.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Unknown'}
+                      Last login: {user?.lastLogin
+                        ? new Date(user.lastLogin).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : 'Unknown'}
                     </small>
                   </div>
                 </li>
@@ -131,6 +133,17 @@ const Navbar: React.FC = () => {
         </div>
       </div>
     </nav>
+
+    <ConfirmModal
+      show={showLogoutConfirm}
+      title="Logout"
+      message="Are you sure you want to logout?"
+      confirmLabel="Logout"
+      confirmVariant="warning"
+      onConfirm={confirmLogout}
+      onCancel={() => setShowLogoutConfirm(false)}
+    />
+  </>
   );
 };
 

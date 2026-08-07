@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { folderApi, Folder } from '../services/api';
+import ConfirmModal from './ConfirmModal';
 
 interface EditFolderModalProps {
   show: boolean;
@@ -18,6 +19,7 @@ const EditFolderModal: React.FC<EditFolderModalProps> = ({ show, onHide, onFolde
   });
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState('');
 
   const predefinedColors = [
@@ -88,20 +90,20 @@ const EditFolderModal: React.FC<EditFolderModalProps> = ({ show, onHide, onFolde
       setError('No folder selected');
       return;
     }
+    setShowDeleteConfirm(true);
+  };
 
-    const confirmMessage = `Are you sure you want to delete "${folder.name}"?\n\nThis will permanently delete the folder and all its notes. This action cannot be undone.`;
-    
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
-
+  const confirmDelete = async () => {
+    if (!folder) return;
     try {
       setDeleting(true);
       await folderApi.delete(folder._id);
       onFolderDeleted(folder._id);
+      setShowDeleteConfirm(false);
       handleHide();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to delete folder. Please try again.');
+      setShowDeleteConfirm(false);
     } finally {
       setDeleting(false);
     }
@@ -367,6 +369,17 @@ const EditFolderModal: React.FC<EditFolderModalProps> = ({ show, onHide, onFolde
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        show={showDeleteConfirm}
+        title="Delete Folder"
+        message={`Are you sure you want to delete "${folder?.name}"? This will permanently delete the folder and all its notes. This action cannot be undone.`}
+        confirmLabel="Delete Folder"
+        confirmVariant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        isLoading={deleting}
+      />
     </>
   );
 };
