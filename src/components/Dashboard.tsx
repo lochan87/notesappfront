@@ -1,40 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { folderApi, Folder } from '../services/api';
+import { Folder } from '../services/api';
+import { useData } from '../contexts/DataContext';
 import CreateFolderModal from './CreateFolderModal';
 import FolderCard from './FolderCard';
 
 const Dashboard: React.FC = () => {
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { folders, foldersLoaded, foldersLoading, fetchFolders, addFolderLocally } = useData();
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     loadFolders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadFolders = async () => {
+  const loadFolders = async (force = false) => {
     try {
-      setLoading(true);
-      const data = await folderApi.getAll();
-      setFolders(data);
       setError('');
+      await fetchFolders(force);
     } catch (err) {
       console.error('Error loading folders:', err);
       setError('Failed to load folders. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleFolderCreated = (newFolder: Folder) => {
-    setFolders(prev => [newFolder, ...prev]);
+    addFolderLocally(newFolder);
     setShowCreateModal(false);
   };
 
-  if (loading) {
+  // Show spinner only on the very first load — subsequent visits use cached data
+  const isInitialLoading = !foldersLoaded && foldersLoading;
+
+  if (isInitialLoading) {
     return (
       <div className="container-fluid py-4">
         <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
@@ -107,7 +107,7 @@ const Dashboard: React.FC = () => {
               <button
                 type="button"
                 className="btn btn-link text-danger ms-auto"
-                onClick={loadFolders}
+                onClick={() => loadFolders(true)}
               >
                 Retry
               </button>

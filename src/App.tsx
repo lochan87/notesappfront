@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { DataProvider } from './contexts/DataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
@@ -68,7 +69,9 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppContent />
+        <DataProvider>
+          <AppContent />
+        </DataProvider>
       </AuthProvider>
     </ThemeProvider>
   );

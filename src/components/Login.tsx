@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 
@@ -7,6 +7,14 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
+
+  // Warm up the Render backend the instant the login page loads.
+  // This fires in the background while the user types their password,
+  // so the cold-start delay is hidden behind normal user interaction time.
+  useEffect(() => {
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    fetch(`${apiUrl}/api/health`).catch(() => {}); // fire-and-forget, ignore errors
+  }, []);
 
   if (isAuthenticated) {
     return <Navigate to="/" />;

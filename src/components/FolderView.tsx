@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { folderApi, noteApi, Folder, Note } from '../services/api';
+import { useData } from '../contexts/DataContext';
 import CreateNoteModal from './CreateNoteModal';
 import EditFolderModal from './EditFolderModal';
 import NoteCard from './NoteCard';
@@ -8,6 +9,19 @@ import NoteCard from './NoteCard';
 const FolderView: React.FC = () => {
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
+
+  // ── DataContext ─────────────────────────────────────────────────────────
+  const {
+    folders,
+    notesCacheByFolder,
+    cacheNotes,
+    addNoteLocally,
+    updateNoteLocally,
+    removeNoteLocally,
+    updateFolderLocally,
+    removeFolderLocally,
+  } = useData();
+
   const [folder, setFolder] = useState<Folder | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,17 +40,66 @@ const FolderView: React.FC = () => {
     totalNotes: 0
   });
 
+  /**
+   * Tracks whether the searchQuery/sortBy/sortOrder/page effect is firing
+   * due to a genuine param change (true) or just the initial mount (false).
+   * We reset it to false whenever folderId changes so the initial load for
+   * each new folder is handled exclusively by the folderId effect.
+   */
+  const isParamChangeRef = useRef(false);
+
   useEffect(() => {
-    if (folderId) {
+    if (!folderId) return;
+
+    // Reset the param-change guard so the params effect skips its first run
+    // for this folderId (the folderId effect owns the initial load).
+    isParamChangeRef.current = false;
+
+    // ── 1) Folder details ─────────────────────────────────────────────────
+    // Try the folders already in context (fetched by Dashboard) first —
+    // avoids a round-trip to GET /api/folders/:id on every folder open.
+    const contextFolder = folders.find(f => f._id === folderId);
+    if (contextFolder) {
+      setFolder(contextFolder);
+    } else {
       loadFolder();
+    }
+
+    // ── 2) Notes ──────────────────────────────────────────────────────────
+    // Use the notes cache for instant render when navigating back from a note.
+    // Only use cache when it was fetched with the default params (no search,
+    // default sort, page 1) — otherwise fetch fresh.
+    const cached = notesCacheByFolder[folderId];
+    const isCacheUsable =
+      cached &&
+      cached.search === '' &&
+      cached.sortBy === 'createdAt' &&
+      cached.sortOrder === 'desc' &&
+      cached.page === 1;
+
+    if (isCacheUsable) {
+      // Restore notes from cache — no spinner, no API call.
+      setNotes(cached!.data.notes);
+      setPagination(cached!.data.pagination);
+      setLoading(false);
+    } else {
+      // No usable cache — fetch from API.
       loadNotes();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folderId]);
 
   useEffect(() => {
+    // Skip the very first run for this folderId — the folderId effect above
+    // already handled the initial load (possibly from cache).
+    if (!isParamChangeRef.current) {
+      isParamChangeRef.current = true;
+      return;
+    }
     if (folderId) {
       loadNotes();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, sortBy, sortOrder, pagination.current]);
 
   const loadFolder = async () => {
@@ -66,6 +129,16 @@ const FolderView: React.FC = () => {
       setNotes(data.notes);
       setPagination(data.pagination);
       setError('');
+
+      // Cache the result when using default params so navigating back here is instant.
+      if (!searchQuery && sortBy === 'createdAt' && sortOrder === 'desc' && pagination.current === 1) {
+        cacheNotes(folderId, data, {
+          search: '',
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+          page: 1,
+        });
+      }
     } catch (err) {
       console.error('Error loading notes:', err);
       setError('Failed to load notes.');
@@ -76,9 +149,12 @@ const FolderView: React.FC = () => {
   };
 
   const handleNoteCreated = (newNote: Note) => {
+    // Update local notes list for immediate UI feedback
     setNotes(prev => [newNote, ...prev]);
+    // Sync to context cache so Dashboard notesCount and back-navigation stay accurate
+    addNoteLocally(folderId!, newNote);
     setShowCreateModal(false);
-    // Update folder notes count
+    // Update local folder header notesCount
     if (folder) {
       setFolder(prev => prev ? { ...prev, notesCount: prev.notesCount + 1 } : null);
     }
@@ -86,26 +162,28 @@ const FolderView: React.FC = () => {
 
   const handleNoteDeleted = (deletedNoteId: string) => {
     setNotes(prev => prev.filter(note => note._id !== deletedNoteId));
-    // Update folder notes count
+    removeNoteLocally(folderId!, deletedNoteId);
     if (folder) {
       setFolder(prev => prev ? { ...prev, notesCount: prev.notesCount - 1 } : null);
     }
   };
 
   const handleNoteUpdated = (updatedNote: Note) => {
-    setNotes(prev => 
-      prev.map(note => 
-        note._id === updatedNote._id ? updatedNote : note
-      )
+    setNotes(prev =>
+      prev.map(note => (note._id === updatedNote._id ? updatedNote : note))
     );
+    updateNoteLocally(folderId!, updatedNote);
   };
 
   const handleFolderUpdated = (updatedFolder: Folder) => {
     setFolder(updatedFolder);
+    // Keep Dashboard folders list in sync
+    updateFolderLocally(updatedFolder);
   };
 
   const handleFolderDeleted = () => {
-    // Navigate back to dashboard after folder deletion
+    // Remove from context (clears notes cache too) then navigate away
+    removeFolderLocally(folderId!);
     navigate('/');
   };
 
