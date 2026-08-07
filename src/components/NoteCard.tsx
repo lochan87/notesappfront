@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Note, noteApi } from '../services/api';
 import ConfirmModal from './ConfirmModal';
+import { timeAgo, formatShortDate } from '../utils/time';
 
 interface NoteCardProps {
   note: Note;
   onDeleted: (noteId: string) => void;
   onUpdated: (note: Note) => void;
+  folderColor?: string;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note, onDeleted, onUpdated }) => {
+const NoteCard: React.FC<NoteCardProps> = ({ note, onDeleted, onUpdated, folderColor }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingPin, setIsTogglingPin] = useState(false);
@@ -42,23 +44,20 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onDeleted, onUpdated }) => {
     }
   };
 
-  /** Format as "Aug 7, 2026, 12:34 PM" */
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
 
   const truncateContent = (content: string, maxLength = 150) =>
     content.length <= maxLength ? content : content.substring(0, maxLength) + '…';
 
+  const lastModified = note.mainLastModified || note.lastModified;
+
   return (
     <>
       <div className="card h-100 shadow-sm border-0 note-card">
-        <div className="card-body d-flex flex-column">
+        {/* Folder color left stripe */}
+        {folderColor && (
+          <div className="note-card-color-stripe" style={{ backgroundColor: folderColor }} />
+        )}
+        <div className="card-body d-flex flex-column" style={{ paddingLeft: folderColor ? '1.25rem' : undefined }}>
           {/* Header */}
           <div className="d-flex justify-content-between align-items-start mb-3">
             <div className="d-flex align-items-center">
@@ -170,9 +169,13 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onDeleted, onUpdated }) => {
 
           {/* Footer */}
           <div className="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
-            <div className="text-muted" style={{ fontSize: '0.78rem' }}>
+            <div
+              className="text-muted"
+              style={{ fontSize: '0.78rem' }}
+              title={formatShortDate(lastModified)}
+            >
               <i className="bi bi-clock me-1" />
-              {formatDate(note.mainLastModified || note.lastModified)}
+              {timeAgo(lastModified)}
             </div>
           </div>
         </div>

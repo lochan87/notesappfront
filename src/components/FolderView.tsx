@@ -33,6 +33,7 @@ const FolderView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     current: 1,
     total: 1,
@@ -87,6 +88,19 @@ const FolderView: React.FC = () => {
       loadNotes();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folderId]);
+
+  // Save scroll position when leaving; restore when returning
+  useEffect(() => {
+    const key = `fv-scroll-${folderId}`;
+    const saved = sessionStorage.getItem(key);
+    if (saved) {
+      requestAnimationFrame(() => window.scrollTo({ top: parseInt(saved, 10) }));
+      sessionStorage.removeItem(key);
+    }
+    return () => {
+      sessionStorage.setItem(key, String(window.scrollY));
+    };
   }, [folderId]);
 
   useEffect(() => {
@@ -419,13 +433,40 @@ const FolderView: React.FC = () => {
       ) : (
         <>
           <div className="row">
+            {/* Tag filter chips */}
+            {(() => {
+              const allTags = Array.from(
+                new Set(notes.flatMap(n => n.tags || []))
+              ).sort();
+              if (allTags.length === 0) return null;
+              return (
+                <div className="col-12 mb-3 d-flex flex-wrap gap-2 align-items-center">
+                  <small className="text-muted me-1"><i className="bi bi-funnel me-1" />Filter:</small>
+                  {allTags.map(tag => (
+                    <span
+                      key={tag}
+                      className={`badge tag-filter-chip ${activeTag === tag ? 'active bg-primary' : 'bg-secondary'}`}
+                      onClick={() => setActiveTag(prev => prev === tag ? null : tag)}
+                      title={activeTag === tag ? 'Clear filter' : `Filter by ${tag}`}
+                    >
+                      {tag}
+                      {activeTag === tag && <i className="bi bi-x ms-1" />}
+                    </span>
+                  ))}
+                </div>
+              );
+            })()}
+
             {viewMode === 'grid' ? (
-              notes.map(note => (
+              notes
+                .filter(n => !activeTag || (n.tags || []).includes(activeTag))
+                .map(note => (
                 <div key={note._id} className="col-lg-4 col-md-6 mb-4">
                   <NoteCard
                     note={note}
                     onDeleted={handleNoteDeleted}
                     onUpdated={handleNoteUpdated}
+                    folderColor={folder?.color}
                   />
                 </div>
               ))

@@ -7,6 +7,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 // Login and Navbar are on the critical path — always bundled
 import Login from './components/Login';
 import Navbar from './components/Navbar';
+import ScrollToTop from './components/ScrollToTop';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
@@ -107,6 +108,9 @@ const AppContent: React.FC = () => {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
+
+      {/* Scroll-to-top button — visible on all authenticated pages */}
+      {isAuthenticated && <ScrollToTop />}
     </>
   );
 };

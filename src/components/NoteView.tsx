@@ -32,6 +32,7 @@ const NoteView: React.FC = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [dragImageIndex, setDragImageIndex] = useState<number | null>(null);
   const { toasts, addToast, dismissToast } = useToast();
 
   // ── Image zoom / pan state ───────────────────────────────────────────────
@@ -219,11 +220,11 @@ const NoteView: React.FC = () => {
     // Validate file types and sizes
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
-        alert(`${file.name} is not an image file`);
+        addToast(`${file.name} is not an image file`, 'error');
         return false;
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        alert(`${file.name} is too large. Maximum size is 5MB`);
+      if (file.size > 5 * 1024 * 1024) {
+        addToast(`${file.name} is too large. Max size is 5 MB`, 'error');
         return false;
       }
       return true;
@@ -231,7 +232,7 @@ const NoteView: React.FC = () => {
 
     const currentImageCount = (note?.images.length || 0) - imagesToRemove.length + selectedImages.length;
     if (currentImageCount + validFiles.length > 5) {
-      alert('You can only have up to 5 images per note');
+      addToast('You can only have up to 5 images per note', 'warning');
       return;
     }
 
@@ -250,9 +251,34 @@ const NoteView: React.FC = () => {
     setImagesToRemove(prev => prev.filter(f => f !== filename));
   };
 
-  const getImagePreview = (file: File): string => {
-    return URL.createObjectURL(file);
+  const getImagePreview = (file: File): string => URL.createObjectURL(file);
+
+  // Drag-to-reorder existing images
+  const handleImageDragStart = (index: number) => setDragImageIndex(index);
+  const handleImageDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragImageIndex === null || dragImageIndex === index || !note) return;
+    const imgs = [...note.images];
+    const [moved] = imgs.splice(dragImageIndex, 1);
+    imgs.splice(index, 0, moved);
+    setNote(prev => prev ? { ...prev, images: imgs } : prev);
+    setDragImageIndex(index);
   };
+  const handleImageDragEnd = () => setDragImageIndex(null);
+
+  // Copy note content to clipboard
+  const handleCopyContent = async () => {
+    if (!note) return;
+    try {
+      await navigator.clipboard.writeText(`${note.title}\n\n${note.content}`);
+      addToast('Copied to clipboard', 'success', 2000);
+    } catch {
+      addToast('Copy failed — please select and copy manually', 'error');
+    }
+  };
+
+  // Print note
+  const handlePrint = () => window.print();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -480,6 +506,22 @@ const NoteView: React.FC = () => {
             <div className="btn-group btn-group-sm d-flex justify-content-start gap-2">
               {!isEditing ? (
                 <>
+                  <button
+                    className="btn btn-outline-secondary"
+                    onClick={handleCopyContent}
+                    title="Copy note content to clipboard"
+                  >
+                    <i className="bi bi-clipboard me-2" />
+                    Copy
+                  </button>
+                  <button
+                    className="btn btn-outline-secondary"
+                    onClick={handlePrint}
+                    title="Print this note"
+                  >
+                    <i className="bi bi-printer me-2" />
+                    Print
+                  </button>
                   <button
                     className="btn btn-outline-secondary"
                     onClick={handleTogglePin}
@@ -752,8 +794,20 @@ const NoteView: React.FC = () => {
               {note.images && note.images.length > 0 ? (
                 <div className="row g-2">
                   {note.images.map((image, index) => (
-                    <div key={index} className="col-6">
+                    <div
+                      key={index}
+                      className={`col-6 drag-image-thumb ${dragImageIndex === index ? 'dragging-over' : ''}`}
+                      draggable={isEditing}
+                      onDragStart={() => isEditing && handleImageDragStart(index)}
+                      onDragOver={(e) => isEditing && handleImageDragOver(e, index)}
+                      onDragEnd={handleImageDragEnd}
+                    >
                       <div className="position-relative">
+                        {isEditing && (
+                          <div className="drag-handle-hint">
+                            <i className="bi bi-grip-vertical" /> drag
+                          </div>
+                        )}
                         <img
                           src={image.data}
                           alt={image.originalName}

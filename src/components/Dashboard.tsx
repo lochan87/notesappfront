@@ -4,6 +4,7 @@ import { Folder } from '../services/api';
 import { useData } from '../contexts/DataContext';
 import CreateFolderModal from './CreateFolderModal';
 import FolderCard from './FolderCard';
+import SkeletonGrid from './SkeletonLoader';
 
 const Dashboard: React.FC = () => {
   const { folders, foldersLoaded, foldersLoading, fetchFolders, addFolderLocally } = useData();
@@ -37,14 +38,16 @@ const Dashboard: React.FC = () => {
   if (isInitialLoading) {
     return (
       <div className="container-fluid py-4">
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
-          <div className="text-center">
-            <div className="spinner-border text-primary mb-3" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="text-muted">Loading your folders...</p>
+        <div className="row mb-4">
+          <div className="col">
+            <h1 className="h3 mb-1">
+              <i className="bi bi-folder2-open me-2 text-primary" />
+              My Folders
+            </h1>
+            <p className="text-muted mb-0">Loading…</p>
           </div>
         </div>
+        <SkeletonGrid count={8} type="folder" colClass="col-lg-3 col-md-4 col-sm-6" />
       </div>
     );
   }
