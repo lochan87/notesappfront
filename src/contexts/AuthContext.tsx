@@ -4,6 +4,7 @@ import axios from 'axios';
 interface User {
   id: string;
   lastLogin: string;
+  username?: string;
 }
 
 interface AuthContextType {

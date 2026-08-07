@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { Navigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
@@ -7,13 +8,12 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
+  const { isDark } = useTheme();
 
   // Warm up the Render backend the instant the login page loads.
-  // This fires in the background while the user types their password,
-  // so the cold-start delay is hidden behind normal user interaction time.
   useEffect(() => {
     const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-    fetch(`${apiUrl}/api/health`).catch(() => {}); // fire-and-forget, ignore errors
+    fetch(`${apiUrl}/api/health`).catch(() => {}); // fire-and-forget
   }, []);
 
   if (isAuthenticated) {
@@ -32,38 +32,64 @@ const Login: React.FC = () => {
     }
 
     const success = await login(password);
-    
+
     if (!success) {
       setError('Invalid password. Please try again.');
       setPassword('');
     }
-    
+
     setLoading(false);
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-      <div className="container">
+    <div className={isDark ? 'login-hero-bg' : 'login-hero-bg-light'}>
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         <div className="row justify-content-center">
           <div className="col-md-6 col-lg-4">
-            <div className="card shadow-lg border-0">
+            <div className={`card border-0 ${isDark ? 'login-glass-card' : 'login-light-card'}`}>
               <div className="card-body p-5">
+
+                {/* Brand */}
                 <div className="text-center mb-4">
-                  <h1 className="h3 text-primary mb-3">
-                    <i className="bi bi-journal-text me-2"></i>
+                  <div className="mb-3">
+                    <i
+                      className="bi bi-journal-text login-brand-icon"
+                      style={{
+                        fontSize: '3rem',
+                        color: isDark ? '#63b3ff' : '#0056b3'
+                      }}
+                    />
+                  </div>
+                  <h1
+                    className="h3 fw-bold mb-1"
+                    style={{ color: isDark ? '#fff' : '#1a1a2e' }}
+                  >
                     Notes App
                   </h1>
-                  <p className="text-muted">Enter your password to access your notes</p>
+                  <p
+                    className="mb-0"
+                    style={{
+                      color: isDark ? 'rgba(255,255,255,0.55)' : '#6c757d',
+                      fontSize: '0.88rem'
+                    }}
+                  >
+                    Your secret place to keep your things safe.
+                  </p>
                 </div>
 
+                {/* Form */}
                 <form onSubmit={handleSubmit}>
                   <div className="mb-4">
-                    <label htmlFor="password" className="form-label fw-semibold">
+                    <label
+                      htmlFor="password"
+                      className="form-label fw-semibold"
+                      style={{ color: isDark ? 'rgba(255,255,255,0.9)' : '#212529' }}
+                    >
                       Password
                     </label>
                     <div className="input-group">
                       <span className="input-group-text">
-                        <i className="bi bi-lock"></i>
+                        <i className="bi bi-lock" />
                       </span>
                       <input
                         type="password"
@@ -78,7 +104,7 @@ const Login: React.FC = () => {
                     </div>
                     {error && (
                       <div className="invalid-feedback d-block">
-                        <i className="bi bi-exclamation-circle me-1"></i>
+                        <i className="bi bi-exclamation-circle me-1" />
                         {error}
                       </div>
                     )}
@@ -86,17 +112,17 @@ const Login: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="btn btn-primary w-100 py-2"
+                    className="btn btn-primary w-100 py-2 fw-semibold"
                     disabled={loading}
                   >
                     {loading ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
                         Signing in...
                       </>
                     ) : (
                       <>
-                        <i className="bi bi-arrow-right-circle me-2"></i>
+                        <i className="bi bi-arrow-right-circle me-2" />
                         Sign In
                       </>
                     )}
@@ -104,11 +130,15 @@ const Login: React.FC = () => {
                 </form>
 
                 <div className="text-center mt-4">
-                  <small className="text-muted">
-                    <i className="bi bi-info-circle me-1"></i>
-                    Secure access to your personal notes
+                  <small style={{
+                    color: isDark ? 'rgba(255,255,255,0.35)' : '#adb5bd',
+                    fontSize: '0.78rem'
+                  }}>
+                    <i className="bi bi-shield-lock me-1" />
+                    Secure access · Personal notes
                   </small>
                 </div>
+
               </div>
             </div>
           </div>

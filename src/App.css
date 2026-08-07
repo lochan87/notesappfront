@@ -1,5 +1,33 @@
 /* Custom Styles for Notes App */
 
+/* ─── Watermark ───────────────────────────────────────────────────────────── */
+
+.app-watermark {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+  overflow: hidden;
+}
+
+.app-watermark::after {
+  content: '387';
+  font-size: clamp(8rem, 22vw, 20rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: rgba(0, 0, 0, 0.04);
+  transform: rotate(-35deg);
+  white-space: nowrap;
+}
+
+.dark-theme .app-watermark::after {
+  color: rgba(255, 255, 255, 0.055);
+}
+
 /* ─── Page Loader (Suspense / Auth fallback) ──────────────────────────────── */
 
 .app-page-loader {
@@ -131,6 +159,7 @@
   border-radius: 12px;
   border: none;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overscroll-behavior: contain; /* stop scroll chaining through modal to background */
 }
 
 .modal-header {
@@ -412,6 +441,28 @@
   
   .modal-footer .d-flex.flex-column .btn:last-child {
     margin-bottom: 0;
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     Mobile keyboard / input fixes
+     iOS Safari auto-zooms the page when a focused input has font-size < 16px.
+     This causes a jarring viewport scale that never resets while typing.
+     Setting all inputs to 16px on mobile prevents the zoom entirely.
+  ───────────────────────────────────────────────────────────── */
+  input,
+  textarea,
+  select,
+  .form-control,
+  .form-select {
+    font-size: 16px !important; /* prevents iOS auto-zoom on focus */
+  }
+
+  /* Prevent double-tap zoom on interactive elements */
+  button,
+  a,
+  .btn,
+  label {
+    touch-action: manipulation;
   }
 }
 
@@ -741,11 +792,13 @@
   color: #007bff !important;
 }
 
-/* Theme transition animations */
+/* Theme transition animations — scoped to color tokens only to avoid
+   sluggish layout/transform animations on interactive elements           */
 *,
 *::before,
 *::after {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+  transition: background-color 0.3s ease, color 0.3s ease,
+              border-color 0.3s ease, box-shadow 0.3s ease !important;
 }
 
 /* Reduce motion for users who prefer it */
@@ -861,4 +914,182 @@
 .dark-theme ::selection {
   background-color: rgba(0, 123, 255, 0.3);
   color: var(--text-primary);
+}
+
+/* ─── Image Zoom Modal ────────────────────────────────────────────────────── */
+
+.image-zoom-container {
+  overflow: hidden;
+  cursor: zoom-in;
+  touch-action: pan-y;   /* allow vertical swipe by default */
+  border-radius: 8px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  position: relative;
+  max-height: 68vh;
+}
+
+.image-zoom-container.dragging {
+  cursor: grabbing;
+}
+
+.image-zoom-container.zoomed {
+  cursor: grab;
+  touch-action: none;    /* block all touch gestures when panning/zooming */
+}
+
+.image-zoom-img {
+  max-width: 100%;
+  max-height: 68vh;
+  transform-origin: center center;
+  transition: transform 0.1s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  justify-content: center;
+}
+
+.zoom-level-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 3.5rem;
+  text-align: center;
+  color: var(--text-secondary, #6c757d);
+}
+
+/* Login page premium background */
+.login-hero-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-hero-bg::before {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(0,123,255,0.12) 0%, transparent 70%);
+  top: -150px;
+  left: -150px;
+  border-radius: 50%;
+}
+
+.login-hero-bg::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(102,16,242,0.1) 0%, transparent 70%);
+  bottom: -100px;
+  right: -100px;
+  border-radius: 50%;
+}
+
+.login-glass-card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.05) !important;
+  color: #fff !important;
+}
+
+.login-glass-card .form-control {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.login-glass-card .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.login-glass-card .form-control:focus {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(99, 179, 255, 0.6) !important;
+  box-shadow: 0 0 0 0.2rem rgba(99, 179, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.login-glass-card .input-group-text {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.login-glass-card .form-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.login-glass-card .text-muted {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.login-glass-card .invalid-feedback {
+  color: #ff9898 !important;
+}
+
+.login-brand-icon {
+  animation: loginIconFloat 3s ease-in-out infinite;
+}
+
+@keyframes loginIconFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+/* ─── Login page — light mode ─────────────────────────────────────────────── */
+
+.login-hero-bg-light {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #eef2ff 0%, #dbeafe 50%, #e0f2fe 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-hero-bg-light::before {
+  content: '';
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(0,86,179,0.08) 0%, transparent 70%);
+  top: -120px;
+  right: -120px;
+  border-radius: 50%;
+}
+
+.login-hero-bg-light::after {
+  content: '';
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%);
+  bottom: -80px;
+  left: -80px;
+  border-radius: 50%;
+}
+
+.login-light-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 86, 179, 0.1) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 86, 179, 0.06) !important;
+  border-radius: 16px !important;
 }

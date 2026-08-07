@@ -57,52 +57,57 @@ const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth();
 
   return (
-    <Router>
-      {isAuthenticated && <Navbar />}
+    <>
+      {/* Background watermark — always rendered, purely decorative */}
+      <div className="app-watermark" aria-hidden="true" />
 
-      {/*
-        Suspense catches lazy-loaded components while their JS chunk downloads.
-        Each route gets a tailored message so the user knows what's happening.
-      */}
-      <Routes>
-        <Route path="/login" element={<Login />} />
+      <Router>
+        {isAuthenticated && <Navbar />}
 
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Suspense fallback={<PageLoader message="Loading your folders…" />}>
-                <Dashboard />
-              </Suspense>
-            </ProtectedRoute>
-          }
-        />
+        {/*
+          Suspense catches lazy-loaded components while their JS chunk downloads.
+          Each route gets a tailored message so the user knows what's happening.
+        */}
+        <Routes>
+          <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/folder/:folderId"
-          element={
-            <ProtectedRoute>
-              <Suspense fallback={<PageLoader message="Opening folder…" />}>
-                <FolderView />
-              </Suspense>
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<PageLoader message="Loading your folders…" />}>
+                  <Dashboard />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/note/:noteId"
-          element={
-            <ProtectedRoute>
-              <Suspense fallback={<PageLoader message="Opening note…" />}>
-                <NoteView />
-              </Suspense>
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/folder/:folderId"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<PageLoader message="Opening folder…" />}>
+                  <FolderView />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
+          <Route
+            path="/note/:noteId"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<PageLoader message="Opening note…" />}>
+                  <NoteView />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </>
   );
 };
 

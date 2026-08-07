@@ -14,9 +14,7 @@ const Navbar: React.FC = () => {
     }
   };
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+  const isActive = (path: string) => location.pathname === path;
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -30,8 +28,11 @@ const Navbar: React.FC = () => {
   }, [location]);
 
   return (
-    <nav className={`navbar navbar-expand-lg ${isDark ? 'navbar-dark bg-dark' : 'navbar-dark bg-primary'} shadow-sm`}>
-      <div className="container">
+    <nav
+      className={`navbar navbar-expand-lg ${isDark ? 'navbar-dark bg-dark' : 'navbar-dark bg-primary'} shadow-sm`}
+      style={{ minHeight: '60px' }}
+    >
+      <div className="container" style={{ minHeight: '60px', alignItems: 'center' }}>
         <Link className="navbar-brand fw-bold" to="/">
           <i className="bi bi-journal-text me-2"></i>
           Notes App
@@ -52,8 +53,8 @@ const Navbar: React.FC = () => {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav me-auto">
             <li className="nav-item">
-              <Link 
-                className={`nav-link ${isActive('/') ? 'active' : ''}`} 
+              <Link
+                className={`nav-link ${isActive('/') ? 'active' : ''}`}
                 to="/"
               >
                 <i className="bi bi-house me-1"></i>
@@ -63,7 +64,7 @@ const Navbar: React.FC = () => {
           </ul>
 
           <ul className="navbar-nav">
-            {/* Theme Toggle Button */}
+            {/* Theme Toggle */}
             <li className="nav-item me-3">
               <button
                 className="theme-toggle nav-link border-0 bg-transparent"
@@ -81,12 +82,11 @@ const Navbar: React.FC = () => {
                 }}
               >
                 <i className={`bi bi-${isDark ? 'sun' : 'moon'}-fill`}></i>
-                <span>
-                  {isDark ? 'Light' : 'Dark'}
-                </span>
+                <span>{isDark ? 'Light' : 'Dark'}</span>
               </button>
             </li>
-            
+
+            {/* User dropdown */}
             <li className="nav-item dropdown">
               <button
                 className="nav-link dropdown-toggle d-flex align-items-center btn btn-link"
@@ -100,6 +100,14 @@ const Navbar: React.FC = () => {
                 <span>Lochan</span>
               </button>
               <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                {/* Identity block */}
+                <li>
+                  <div className="dropdown-item-text py-2 px-3">
+                    <div className="fw-semibold" style={{ fontSize: '0.95rem' }}>Lochan T N</div>
+                    <div className="text-muted" style={{ fontSize: '0.8rem' }}>@lochan387</div>
+                  </div>
+                </li>
+                <li><hr className="dropdown-divider my-1" /></li>
                 <li>
                   <div className="dropdown-item-text">
                     <small className="text-muted">
@@ -109,8 +117,8 @@ const Navbar: React.FC = () => {
                 </li>
                 <li><hr className="dropdown-divider" /></li>
                 <li>
-                  <button 
-                    className="dropdown-item text-danger" 
+                  <button
+                    className="dropdown-item text-danger"
                     onClick={handleLogout}
                   >
                     <i className="bi bi-box-arrow-right me-2"></i>
