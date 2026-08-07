@@ -30,6 +30,13 @@ const NoteView: React.FC = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+  // ── Image zoom / pan state ───────────────────────────────────────────────
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
+  const zoomContainerRef = useRef<HTMLDivElement>(null);
+
   const loadNote = useCallback(async () => {
     try {
       if (!noteId) return;
@@ -283,7 +290,114 @@ const NoteView: React.FC = () => {
   const openImageModal = (index: number) => {
     setSelectedImageIndex(index);
     setShowImageModal(true);
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
   };
+
+  const closeImageModal = () => {
+    setShowImageModal(false);
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
+  const changeModalImage = (newIndex: number) => {
+    setSelectedImageIndex(newIndex);
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(5, parseFloat((prev + 0.25).toFixed(2))));
+  const handleZoomOut = () => setZoomLevel(prev => {
+    const next = parseFloat((prev - 0.25).toFixed(2));
+    if (next <= 1) { setPanOffset({ x: 0, y: 0 }); return 1; }
+    return next;
+  });
+  const handleZoomReset = () => { setZoomLevel(1); setPanOffset({ x: 0, y: 0 }); };
+
+  // NOTE: We do NOT use React's onWheel synthetic event here because React
+  // registers wheel listeners as *passive* by default (since React 17+),
+  // which means e.preventDefault() inside onWheel has no effect and the
+  // page continues to scroll. Instead, we attach a native non-passive
+  // listener directly to the container DOM node via useEffect.
+  const handleZoomDelta = useCallback((delta: number) => {
+    setZoomLevel(prev => {
+      const next = parseFloat((prev + delta).toFixed(2));
+      if (next <= 1) { setPanOffset({ x: 0, y: 0 }); return 1; }
+      return Math.min(5, next);
+    });
+  }, []);
+
+  // Non-passive native wheel listener — prevents page scroll during zoom
+  useEffect(() => {
+    const container = zoomContainerRef.current;
+    if (!container || !showImageModal) return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();        // stops page from scrolling
+      e.stopPropagation();
+      handleZoomDelta(e.deltaY < 0 ? 0.15 : -0.15);
+    };
+
+    container.addEventListener('wheel', onWheel, { passive: false });
+    return () => container.removeEventListener('wheel', onWheel);
+  }, [showImageModal, handleZoomDelta]);
+
+  // Lock body scroll while the image modal is open so the note behind
+  // can't be scrolled via touch or keyboard
+  useEffect(() => {
+    if (showImageModal) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.overscrollBehavior = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.overscrollBehavior = '';
+    }
+    // Always clean up on unmount
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.overscrollBehavior = '';
+    };
+  }, [showImageModal]);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (zoomLevel <= 1) return;
+    e.preventDefault();
+    setIsDragging(true);
+    dragStart.current = { x: e.clientX, y: e.clientY, panX: panOffset.x, panY: panOffset.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !dragStart.current) return;
+    const dx = e.clientX - dragStart.current.x;
+    const dy = e.clientY - dragStart.current.y;
+    setPanOffset({ x: dragStart.current.panX + dx, y: dragStart.current.panY + dy });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    dragStart.current = null;
+  };
+
+  // Keyboard shortcuts for the zoom modal
+  useEffect(() => {
+    if (!showImageModal) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { closeImageModal(); return; }
+      if (e.key === '+' || e.key === '=') { handleZoomIn(); return; }
+      if (e.key === '-') { handleZoomOut(); return; }
+      if (e.key === '0') { handleZoomReset(); return; }
+      if (e.key === 'ArrowLeft' && note?.images && note.images.length > 1) {
+        changeModalImage(selectedImageIndex === 0 ? note.images.length - 1 : selectedImageIndex - 1);
+      }
+      if (e.key === 'ArrowRight' && note?.images && note.images.length > 1) {
+        changeModalImage(selectedImageIndex === note.images.length - 1 ? 0 : selectedImageIndex + 1);
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showImageModal, selectedImageIndex, zoomLevel, panOffset]);
 
   if (loading) {
     return (
@@ -794,65 +908,126 @@ const NoteView: React.FC = () => {
         </div>
       </div>
 
-      {/* Image Modal */}
+      {/* Image Modal — with full zoom & pan */}
       {showImageModal && note.images && note.images.length > 0 && (
         <>
-          <div 
-            className="modal-backdrop fade show" 
-            onClick={() => setShowImageModal(false)}
-          ></div>
-          <div 
-            className="modal fade show d-block" 
-            tabIndex={-1} 
+          <div
+            className="modal-backdrop fade show"
+            onClick={closeImageModal}
+          />
+          <div
+            className="modal fade show d-block"
+            tabIndex={-1}
             style={{ zIndex: 1055 }}
           >
             <div className="modal-dialog modal-lg modal-dialog-centered">
               <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">
+
+                {/* Modal header with filename + zoom controls */}
+                <div className="modal-header flex-wrap gap-2">
+                  <h5 className="modal-title text-truncate" style={{ maxWidth: '55%' }}>
                     {note.images[selectedImageIndex]?.originalName}
                   </h5>
+
+                  {/* Zoom toolbar */}
+                  <div className="d-flex align-items-center gap-1 ms-auto me-2">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={handleZoomOut}
+                      disabled={zoomLevel <= 1}
+                      title="Zoom out (-)" 
+                    >
+                      <i className="bi bi-zoom-out" />
+                    </button>
+                    <span className="zoom-level-badge">{Math.round(zoomLevel * 100)}%</span>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={handleZoomIn}
+                      disabled={zoomLevel >= 5}
+                      title="Zoom in (+)" 
+                    >
+                      <i className="bi bi-zoom-in" />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={handleZoomReset}
+                      disabled={zoomLevel === 1}
+                      title="Reset zoom (0)"
+                    >
+                      <i className="bi bi-aspect-ratio" />
+                    </button>
+                  </div>
+
                   <button
                     type="button"
                     className="btn-close"
-                    onClick={() => setShowImageModal(false)}
-                  ></button>
-                </div>
-                <div className="modal-body text-center">
-                  <img
-                    src={note.images[selectedImageIndex]?.data}
-                    alt={note.images[selectedImageIndex]?.originalName}
-                    className="img-fluid rounded"
-                    style={{ maxHeight: '70vh' }}
-                    onError={(e) => {
-                      console.error('Failed to load image in modal:', note.images[selectedImageIndex]?.originalName);
-                    }}
+                    onClick={closeImageModal}
+                    aria-label="Close"
                   />
-                  
+                </div>
+
+                {/* Zoomable image area */}
+                <div className="modal-body p-2">
+                  <div
+                    ref={zoomContainerRef}
+                    className={`image-zoom-container ${
+                      zoomLevel > 1 ? 'zoomed' : ''
+                    } ${isDragging ? 'dragging' : ''}`}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                  >
+                    <img
+                      src={note.images[selectedImageIndex]?.data}
+                      alt={note.images[selectedImageIndex]?.originalName}
+                      className="image-zoom-img"
+                      style={{
+                        transform: `scale(${zoomLevel}) translate(${panOffset.x / zoomLevel}px, ${panOffset.y / zoomLevel}px)`
+                      }}
+                      draggable={false}
+                      onError={() => {
+                        console.error('Failed to load image in modal:', note.images[selectedImageIndex]?.originalName);
+                      }}
+                    />
+                  </div>
+
+                  {/* Navigation controls */}
                   {note.images.length > 1 && (
-                    <div className="mt-3">
+                    <div className="zoom-controls mt-3">
                       <button
-                        className="btn btn-outline-secondary me-2"
-                        onClick={() => setSelectedImageIndex(prev => 
-                          prev === 0 ? note.images.length - 1 : prev - 1
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() => changeModalImage(
+                          selectedImageIndex === 0 ? note.images.length - 1 : selectedImageIndex - 1
                         )}
+                        title="Previous (←)"
                       >
-                        <i className="bi bi-chevron-left"></i> Previous
+                        <i className="bi bi-chevron-left" /> Previous
                       </button>
-                      <span className="mx-2">
-                        {selectedImageIndex + 1} of {note.images.length}
+                      <span className="text-muted small">
+                        {selectedImageIndex + 1} / {note.images.length}
                       </span>
                       <button
-                        className="btn btn-outline-secondary ms-2"
-                        onClick={() => setSelectedImageIndex(prev => 
-                          prev === note.images.length - 1 ? 0 : prev + 1
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() => changeModalImage(
+                          selectedImageIndex === note.images.length - 1 ? 0 : selectedImageIndex + 1
                         )}
+                        title="Next (→)"
                       >
-                        Next <i className="bi bi-chevron-right"></i>
+                        Next <i className="bi bi-chevron-right" />
                       </button>
                     </div>
                   )}
+
+                  <p className="text-muted text-center small mt-2 mb-0">
+                    <i className="bi bi-info-circle me-1" />
+                    Scroll to zoom • Drag to pan when zoomed • +/−/0 keys • ←/→ to navigate
+                  </p>
                 </div>
+
               </div>
             </div>
           </div>
