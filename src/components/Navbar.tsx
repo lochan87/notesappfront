@@ -88,17 +88,17 @@ const Navbar: React.FC = () => {
             </li>
             
             <li className="nav-item dropdown">
-              <a
-                className="nav-link dropdown-toggle d-flex align-items-center"
-                href="#"
-                role="button"
+              <button
+                className="nav-link dropdown-toggle d-flex align-items-center btn btn-link"
+                type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
                 id="navbarDropdown"
+                style={{ textDecoration: 'none', color: 'inherit' }}
               >
                 <i className="bi bi-person-circle me-2"></i>
                 <span>Lochan</span>
-              </a>
+              </button>
               <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                 <li>
                   <div className="dropdown-item-text">

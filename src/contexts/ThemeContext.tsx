@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 export type Theme = 'light' | 'dark';
 
@@ -38,11 +38,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     return 'light';
   });
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('noteapp-theme', newTheme);
-  };
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => {
+      const newTheme = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('noteapp-theme', newTheme);
+      return newTheme;
+    });
+  }, []); // stable reference — no deps needed with functional setState
 
   // Apply theme to document
   useEffect(() => {
